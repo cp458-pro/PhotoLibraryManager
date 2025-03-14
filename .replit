@@ -7,7 +7,8 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "cloudrun"
-run = ["sh", "-c", "npm run dev"]
+run = ["sh", "-c", "java -jar build/libs/*.jar"]
+build = ["sh", "-c", "./gradlew build"]
 
 [[ports]]
 localPort = 5000
@@ -48,3 +49,16 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "./gradlew bootRun"
+
+[[workflows.workflow]]
+name = "CI"
+author = 35971843
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "./gradlew test"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "./gradlew build"
