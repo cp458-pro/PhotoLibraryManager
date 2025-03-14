@@ -10,10 +10,20 @@ export async function registerRoutes(app: Express) {
   app.post("/api/users", async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByFirebaseId(userData.firebaseUid);
+      if (existingUser) {
+        res.json(existingUser);
+        return;
+      }
+
+      // Create new user if doesn't exist
       const user = await storage.createUser(userData);
       res.json(user);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
+    } catch (error: any) {
+      console.error("User creation error:", error);
+      res.status(400).json({ error: error.message || "Failed to create user" });
     }
   });
 
