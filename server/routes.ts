@@ -76,6 +76,16 @@ export async function registerRoutes(app: Express) {
       // Extract EXIF data
       const exifData = await extractExifData(req.file.buffer);
 
+      // Parse tags if provided
+      let tags: string[] | undefined;
+      if (req.body.tags) {
+        try {
+          tags = JSON.parse(req.body.tags);
+        } catch (e) {
+          console.error('Error parsing tags:', e);
+        }
+      }
+
       // Create photo entry with metadata
       const photoData = {
         url: `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
@@ -89,6 +99,7 @@ export async function registerRoutes(app: Express) {
           ? new Date(exifData.exif.DateTimeOriginal)
           : undefined,
         metadata: exifData,
+        tags: tags || [],
       };
 
       const insertedPhoto = await storage.createPhoto(photoData);

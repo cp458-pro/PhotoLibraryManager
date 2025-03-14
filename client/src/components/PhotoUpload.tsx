@@ -4,12 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 
 export default function PhotoUpload() {
   const [isUploading, setIsUploading] = useState(false);
+  const [tags, setTags] = useState('');
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -21,7 +21,12 @@ export default function PhotoUpload() {
     try {
       const formData = new FormData();
       formData.append('photo', file);
-      
+
+      // Add tags if provided
+      if (tags.trim()) {
+        formData.append('tags', JSON.stringify(tags.split(',').map(t => t.trim()).filter(Boolean)));
+      }
+
       const response = await fetch('/api/photos/upload', {
         method: 'POST',
         body: formData,
@@ -32,7 +37,7 @@ export default function PhotoUpload() {
       }
 
       const photo = await response.json();
-      
+
       // Invalidate photos query to refresh the list
       queryClient.invalidateQueries({ queryKey: ['/api/photos'] });
 
@@ -40,6 +45,9 @@ export default function PhotoUpload() {
         title: "Success",
         description: `Photo uploaded successfully${photo.metadata ? ' with EXIF data' : ''}!`,
       });
+
+      // Clear the tags input after successful upload
+      setTags('');
 
     } catch (error: any) {
       console.error('Upload error:', error);
@@ -57,8 +65,8 @@ export default function PhotoUpload() {
     <Card className="mb-8">
       <CardContent className="pt-6">
         <div className="space-y-4">
-          <Label htmlFor="photo">Upload Photo</Label>
-          <div className="flex items-center gap-4">
+          <div>
+            <Label htmlFor="photo">Upload Photo</Label>
             <Input
               id="photo"
               type="file"
@@ -67,10 +75,22 @@ export default function PhotoUpload() {
               disabled={isUploading}
               className="cursor-pointer"
             />
-            {isUploading && (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            )}
           </div>
+          <div>
+            <Label htmlFor="tags">Tags (comma-separated)</Label>
+            <Input
+              id="tags"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              placeholder="nature, vacation, family..."
+              disabled={isUploading}
+            />
+          </div>
+          {isUploading && (
+            <div className="flex items-center justify-center">
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </div>
+          )}
           <p className="text-sm text-muted-foreground">
             Upload a photo to automatically extract its metadata (EXIF data).
             Supported formats: JPEG
