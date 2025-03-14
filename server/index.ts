@@ -1,6 +1,11 @@
 import express, { type Request, Response, NextFunction } from "express";
+import mongoose from "mongoose";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+
+mongoose.connect('mongodb://localhost:27017/photoapp')
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
 const app = express();
 app.use(express.json());
