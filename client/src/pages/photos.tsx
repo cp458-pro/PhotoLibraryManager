@@ -3,8 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { type DateRange } from "react-day-picker";
 import PhotoGrid from "@/components/PhotoGrid";
 import PhotoFilters from "@/components/PhotoFilters";
-import { auth } from "@/lib/firebase";
-import { useLocation } from "wouter";
 import { type Photo } from "@shared/schema";
 
 interface PhotoFilters {
@@ -14,7 +12,6 @@ interface PhotoFilters {
 }
 
 export default function Photos() {
-  const [, setLocation] = useLocation();
   const [filters, setFilters] = useState<PhotoFilters>({
     dateRange: null,
     location: "",
@@ -22,14 +19,8 @@ export default function Photos() {
   });
 
   const { data: photos = [], isLoading } = useQuery<Photo[]>({
-    queryKey: ["/api/photos", { userId: auth.currentUser?.uid }],
-    enabled: !!auth.currentUser
+    queryKey: ["/api/photos"]
   });
-
-  if (!auth.currentUser) {
-    setLocation("/");
-    return null;
-  }
 
   const filteredPhotos = photos.filter(photo => {
     if (filters.location && photo.location && !photo.location.toLowerCase().includes(filters.location.toLowerCase())) {
@@ -55,6 +46,7 @@ export default function Photos() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8">
+        <h1 className="text-3xl font-bold mb-8">Photo Library</h1>
         <PhotoFilters filters={filters} onChange={setFilters} />
         <PhotoGrid photos={filteredPhotos} isLoading={isLoading} />
       </div>
