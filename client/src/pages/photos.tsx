@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { type DateRange } from "react-day-picker";
 import PhotoGrid from "@/components/PhotoGrid";
 import PhotoFilters from "@/components/PhotoFilters";
+import PhotoUpload from "@/components/PhotoUpload";
 import { type Photo } from "@shared/schema";
 
 interface PhotoFilters {
@@ -47,6 +48,7 @@ export default function Photos() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8">
         <h1 className="text-3xl font-bold mb-8">Photo Library</h1>
+        <PhotoUpload />
         <PhotoFilters filters={filters} onChange={setFilters} />
         <PhotoGrid photos={filteredPhotos} isLoading={isLoading} />
       </div>

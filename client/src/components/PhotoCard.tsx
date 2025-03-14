@@ -1,6 +1,6 @@
 import { type Photo } from "@shared/schema";
 import { format } from "date-fns";
-import { MapPin, Calendar, Tag } from "lucide-react";
+import { MapPin, Calendar, Tag, Camera, Aperture } from "lucide-react";
 import {
   HoverCard,
   HoverCardContent,
@@ -58,6 +58,22 @@ export default function PhotoCard({ photo }: PhotoCardProps) {
                   </span>
                 ))}
               </div>
+            </div>
+          )}
+          {photo.metadata?.image && (
+            <div className="flex items-center gap-2 text-sm">
+              <Camera className="h-4 w-4" />
+              <span>
+                {photo.metadata.image.Make} {photo.metadata.image.Model}
+              </span>
+            </div>
+          )}
+          {photo.metadata?.exif && (
+            <div className="flex items-center gap-2 text-sm">
+              <Aperture className="h-4 w-4" />
+              <span>
+                f/{photo.metadata.exif.FNumber}, {photo.metadata.exif.ExposureTime}s, ISO {photo.metadata.exif.ISO}
+              </span>
             </div>
           )}
         </div>

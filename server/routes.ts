@@ -1,7 +1,23 @@
 import type { Express } from "express";
 import { createServer } from "http";
+import multer from "multer";
 import { storage } from "./storage";
 import { insertPhotoSchema, insertAlbumSchema } from "@shared/schema";
+import { extractExifData } from "./utils/exif";
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  },
+});
 
 export async function registerRoutes(app: Express) {
   const server = createServer(app);
@@ -50,12 +66,35 @@ export async function registerRoutes(app: Express) {
     res.json(photos);
   });
 
-  app.post("/api/photos", async (req, res) => {
+  // New endpoint for photo upload with EXIF extraction
+  app.post("/api/photos/upload", upload.single('photo'), async (req, res) => {
     try {
-      const photoData = insertPhotoSchema.parse(req.body);
-      const photo = await storage.createPhoto(photoData);
-      res.json(photo);
+      if (!req.file) {
+        throw new Error('No file uploaded');
+      }
+
+      // Extract EXIF data
+      const exifData = await extractExifData(req.file.buffer);
+
+      // Create photo entry with metadata
+      const photoData = {
+        url: `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
+        title: req.body.title,
+        description: req.body.description,
+        albumId: req.body.albumId ? Number(req.body.albumId) : undefined,
+        location: exifData?.exif?.GPSLatitude && exifData?.exif?.GPSLongitude 
+          ? `${exifData.exif.GPSLatitude},${exifData.exif.GPSLongitude}`
+          : undefined,
+        takenAt: exifData?.exif?.DateTimeOriginal 
+          ? new Date(exifData.exif.DateTimeOriginal)
+          : undefined,
+        metadata: exifData,
+      };
+
+      const insertedPhoto = await storage.createPhoto(photoData);
+      res.json(insertedPhoto);
     } catch (error: any) {
+      console.error('Error uploading photo:', error);
       res.status(400).json({ error: error.message });
     }
   });
