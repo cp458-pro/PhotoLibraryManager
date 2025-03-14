@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function PhotoUpload() {
   const [isUploading, setIsUploading] = useState(false);
-  const [tags, setTags] = useState('');
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -21,11 +20,6 @@ export default function PhotoUpload() {
     try {
       const formData = new FormData();
       formData.append('photo', file);
-
-      // Add tags if provided
-      if (tags.trim()) {
-        formData.append('tags', JSON.stringify(tags.split(',').map(t => t.trim()).filter(Boolean)));
-      }
 
       const response = await fetch('/api/photos/upload', {
         method: 'POST',
@@ -45,9 +39,6 @@ export default function PhotoUpload() {
         title: "Success",
         description: `Photo uploaded successfully${photo.metadata ? ' with EXIF data' : ''}!`,
       });
-
-      // Clear the tags input after successful upload
-      setTags('');
 
     } catch (error: any) {
       console.error('Upload error:', error);
@@ -74,16 +65,6 @@ export default function PhotoUpload() {
               onChange={handleUpload}
               disabled={isUploading}
               className="cursor-pointer"
-            />
-          </div>
-          <div>
-            <Label htmlFor="tags">Tags (comma-separated)</Label>
-            <Input
-              id="tags"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="nature, vacation, family..."
-              disabled={isUploading}
             />
           </div>
           {isUploading && (
